@@ -169,6 +169,10 @@ To switch back to the remote API, update `services/product.py` to restore the `h
 | Australia Post Domestic & International | `2004456017` |
 | Same Day Services | `3004456017` |
 
+### Known Limitations / Not Yet Implemented
+
+- **TNT delivery status tracking** — Orders shipped via TNT (e.g. `assigned_tracking = Track 3`, logistics company = TNT) do not have live tracking status. The current tracking integration only covers StarTrack/AusPost consignments via the AusPost Shipping API (`GET /track`). TNT uses a separate tracking API that has not been integrated. TNT shipments will show no `tracking_status` or events in the Order Detail page.
+
 ### Invoice calculation
 
 - **Line Total** = RRP × Qty  

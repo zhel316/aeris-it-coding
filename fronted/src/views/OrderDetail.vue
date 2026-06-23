@@ -58,13 +58,23 @@
           </div>
           <template v-else>
             <div v-for="s in auspostShipments" :key="s.shipment_id" class="shipment-block">
+
+              <!-- Shipment header row -->
               <div class="shipment-header">
                 <div class="shipment-ref-row">
                   <span class="mono bold">{{ s.shipment_reference }}</span>
-                  <span :class="['badge', shipmentStatusClass(s.status)]">{{ s.status }}</span>
+                  <span v-if="s.tracking_status" :class="['badge', trackingStatusClass(s.tracking_status)]">
+                    {{ s.tracking_status }}
+                  </span>
+                  <span v-else :class="['badge', shipmentStatusClass(s.status)]">{{ s.status }}</span>
                 </div>
-                <div class="shipment-cost">${{ fmt(s.total_cost) }} <span class="gst-note">(incl. GST ${{ fmt(s.total_gst) }})</span></div>
+                <div class="shipment-cost">
+                  ${{ fmt(s.total_cost) }}
+                  <span class="gst-note">(incl. GST ${{ fmt(s.total_gst) }})</span>
+                </div>
               </div>
+
+              <!-- Items table -->
               <table class="data-table">
                 <thead>
                   <tr>
@@ -79,14 +89,40 @@
                   <tr v-for="item in s.items" :key="item.article_id">
                     <td class="mono">{{ item.article_id }}</td>
                     <td class="mono">{{ item.consignment_id }}</td>
-                    <td>
-                      <span class="product-badge">{{ item.product_name }}</span>
-                    </td>
+                    <td><span class="product-badge">{{ item.product_name }}</span></td>
                     <td>{{ item.weight }} kg</td>
-                    <td><span :class="['badge', shipmentStatusClass(item.status)]">{{ item.status }}</span></td>
+                    <td>
+                      <span v-if="item.tracking_status" :class="['badge', trackingStatusClass(item.tracking_status)]">
+                        {{ item.tracking_status }}
+                      </span>
+                      <span v-else :class="['badge', shipmentStatusClass(item.status)]">{{ item.status }}</span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
+
+              <!-- Tracking events timeline -->
+              <div v-if="s.tracking_events && s.tracking_events.length" class="timeline-section">
+                <div class="timeline-title">Tracking Events</div>
+                <div class="timeline">
+                  <div
+                    v-for="(evt, idx) in s.tracking_events"
+                    :key="idx"
+                    class="timeline-item"
+                    :class="{ 'timeline-item--first': idx === 0 }"
+                  >
+                    <div class="tl-dot" :class="idx === 0 ? 'tl-dot--active' : ''"></div>
+                    <div class="tl-content">
+                      <div class="tl-desc" :class="idx === 0 ? 'tl-desc--active' : ''">{{ evt.description }}</div>
+                      <div class="tl-meta">
+                        <span v-if="evt.location" class="tl-location">{{ evt.location }}</span>
+                        <span class="tl-date">{{ formatEventDate(evt.date) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             <!-- Shipping cost summary -->
@@ -238,6 +274,22 @@ function shipmentStatusClass(s) {
   return map[s] || 'badge-created'
 }
 
+function trackingStatusClass(s) {
+  if (!s) return 'badge-created'
+  const l = s.toLowerCase()
+  if (l.includes('delivered')) return 'badge-completed'
+  if (l.includes('out for delivery')) return 'badge-out-delivery'
+  if (l.includes('in transit')) return 'badge-in-transit'
+  if (l.includes('picked up')) return 'badge-picked-up'
+  return 'badge-created'
+}
+
+function formatEventDate(d) {
+  if (!d) return ''
+  const dt = new Date(d)
+  return dt.toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 function fmt(n) { return Number(n || 0).toFixed(2) }
 
 onMounted(async () => {
@@ -283,10 +335,43 @@ onMounted(async () => {
 .shipment-cost { font-size: .9rem; font-weight: 600; color: #1e293b; }
 .gst-note { font-weight: 400; color: #64748b; font-size: .8rem; }
 
-.badge-created  { background: #e0f2fe; color: #0369a1; }
-.badge-despatch { background: #fef3c7; color: #b45309; }
+.badge-created      { background: #e0f2fe; color: #0369a1; }
+.badge-despatch     { background: #fef3c7; color: #b45309; }
+.badge-out-delivery { background: #fef3c7; color: #b45309; }
+.badge-picked-up    { background: #ede9fe; color: #7c3aed; }
 
 .product-badge { display: inline-block; padding: .15rem .55rem; background: #f0fdf4; color: #15803d; border-radius: 4px; font-size: .78rem; font-weight: 600; }
+
+/* Timeline */
+.timeline-section { padding: .75rem 1.25rem 1rem; background: #fafafa; border-top: 1px solid #f1f5f9; }
+.timeline-title { font-size: .75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .4px; margin-bottom: .75rem; }
+.timeline { display: flex; flex-direction: column; gap: 0; padding-left: .25rem; }
+
+.timeline-item { display: flex; gap: .75rem; position: relative; padding-bottom: .75rem; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 14px;
+  bottom: 0;
+  width: 1px;
+  background: #e2e8f0;
+}
+
+.tl-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: #cbd5e1; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  flex-shrink: 0; margin-top: 2px;
+}
+.tl-dot--active { background: #1e3a5f; box-shadow: 0 0 0 1px #1e3a5f; }
+
+.tl-content { flex: 1; }
+.tl-desc { font-size: .85rem; color: #475569; }
+.tl-desc--active { font-weight: 600; color: #1e293b; }
+.tl-meta { display: flex; gap: .75rem; margin-top: .15rem; font-size: .75rem; color: #94a3b8; }
+.tl-location::after { content: '·'; margin-left: .75rem; }
 
 .shipping-total { display: flex; justify-content: flex-end; gap: 3rem; padding: .75rem 1.25rem; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: .9rem; color: #475569; }
 
