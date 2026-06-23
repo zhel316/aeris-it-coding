@@ -10,7 +10,6 @@
       <div class="order-header mt-4">
         <div>
           <span class="order-no">{{ order.order_no }}</span>
-          <span :class="['badge', statusClass(order.status), 'ml-3']">{{ order.status }}</span>
         </div>
         <div class="order-date">Order date: {{ formatDate(order.order_data) }}</div>
       </div>
@@ -263,10 +262,6 @@ function formatDate(d) {
   if (!d) return '—'
   const [y, m, day] = d.split('-')
   return `${day}/${m}/${y.slice(2)}`
-}
-
-function statusClass(s) {
-  return s === 'completed' ? 'badge-completed' : 'badge-in-transit'
 }
 
 function shipmentStatusClass(s) {

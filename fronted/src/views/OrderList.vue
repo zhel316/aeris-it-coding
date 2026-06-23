@@ -7,11 +7,6 @@
       <input v-model="filters.order_no"      placeholder="Order #"       class="filter-input" @keyup.enter="load" />
       <input v-model="filters.company_name"  placeholder="Company"       class="filter-input" @keyup.enter="load" />
       <input v-model="filters.customer_name" placeholder="Customer"      class="filter-input" @keyup.enter="load" />
-      <select v-model="filters.status" class="filter-input">
-        <option value="">All status</option>
-        <option value="completed">Completed</option>
-        <option value="in-transit">In Transit</option>
-      </select>
       <button class="btn-primary" @click="load">Search</button>
       <button class="btn-ghost"   @click="reset">Reset</button>
     </div>
@@ -28,7 +23,6 @@
           <tr>
             <th>Order #</th>
             <th>Date</th>
-            <th>Status</th>
             <th>Company</th>
             <th>Customer</th>
             <th></th>
@@ -36,7 +30,7 @@
         </thead>
         <tbody>
           <tr v-if="orders.length === 0">
-            <td colspan="6" class="empty-row">No orders found.</td>
+            <td colspan="5" class="empty-row">No orders found.</td>
           </tr>
           <tr
             v-for="order in orders"
@@ -46,11 +40,6 @@
           >
             <td class="mono">{{ order.order_no }}</td>
             <td>{{ formatDate(order.order_data) }}</td>
-            <td>
-              <span :class="['badge', statusClass(order.status)]">
-                {{ order.status }}
-              </span>
-            </td>
             <td>{{ order.company_name }}</td>
             <td>{{ order.customer_name }}</td>
             <td class="action-cell">
@@ -73,7 +62,7 @@ const orders  = ref([])
 const loading = ref(false)
 const error   = ref(null)
 
-const filters = reactive({ order_no: '', company_name: '', customer_name: '', status: '' })
+const filters = reactive({ order_no: '', company_name: '', customer_name: '' })
 
 async function load() {
   loading.value = true
@@ -91,7 +80,7 @@ async function load() {
 }
 
 function reset() {
-  Object.assign(filters, { order_no: '', company_name: '', customer_name: '', status: '' })
+  Object.assign(filters, { order_no: '', company_name: '', customer_name: '' })
   load()
 }
 
@@ -103,10 +92,6 @@ function formatDate(d) {
   if (!d) return '—'
   const [y, m, day] = d.split('-')
   return `${day}/${m}/${y.slice(2)}`
-}
-
-function statusClass(s) {
-  return s === 'completed' ? 'badge-completed' : 'badge-in-transit'
 }
 
 onMounted(load)
