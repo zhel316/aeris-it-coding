@@ -106,8 +106,6 @@ The app will be available at `http://localhost:5173`.
 
 `/orders/?order_no=&status=&company_name=&customer_name=&date_from=&date_to=`
 
-Status values: `completed` · `in-transit`
-
 ---
 
 ## Configuration
@@ -179,4 +177,4 @@ To switch back to the remote API, update `services/product.py` to restore the `h
 - **Subtotal** = sum of all Line Totals  
 - **GST** = Subtotal × 10% (RRP already includes GST; this is shown as a display component)  
 - **Shipment Fee** = sum of `total_cost` from AusPost for all shipments under the order  
-- **Total** = Subtotal + GST + Shipment Fee
+- **Total** = Subtotal(including GST) + Shipment Fee

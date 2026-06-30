@@ -59,7 +59,7 @@ def build_invoice(
     products = [Product(sku, qty) for sku, qty in sku_qty_pairs]
     subtotal = round(sum(p.line_total for p in products), 2)
     gst = round(subtotal * 0.10, 2)
-    total = round(subtotal + gst + shipment_fee, 2)
+    total = round(subtotal + shipment_fee, 2)
 
     return {
         "items": [p.to_dict() for p in products],
